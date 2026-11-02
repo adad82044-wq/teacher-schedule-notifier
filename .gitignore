@@ -1,0 +1,14 @@
+# Sensitive configs
+config.json
+*.log
+
+# PyInstaller & Build artifacts
+build/
+dist/
+*.spec
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+.idea/
+.vscode/

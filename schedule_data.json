@@ -1,0 +1,210 @@
+{
+  "school_name": "โรงเรียนสารวิทยา",
+  "teacher_name": "ครูวีวิวัฒน์ คีรีสูงเนิน (ครูเม่น)",
+  "semester": "ภาคเรียนที่ 2 ปีการศึกษา 2569",
+  "period_duration_minutes": 40,
+  "periods": [
+    {
+      "period": 1,
+      "start": "08:20",
+      "end": "09:00",
+      "notify_at": null,
+      "description": "คาบ 1 ไม่ต้องแจ้งเตือน"
+    },
+    {
+      "period": 2,
+      "start": "09:00",
+      "end": "09:40",
+      "notify_at": "08:20",
+      "description": "แจ้งเตือนตอนต้นคาบ 1"
+    },
+    {
+      "period": 3,
+      "start": "09:40",
+      "end": "10:20",
+      "notify_at": "09:00",
+      "description": "แจ้งเตือนตอนต้นคาบ 2"
+    },
+    {
+      "period": 4,
+      "start": "10:20",
+      "end": "11:00",
+      "notify_at": "09:40",
+      "description": "แจ้งเตือนตอนต้นคาบ 3"
+    },
+    {
+      "period": 5,
+      "start": "11:00",
+      "end": "11:40",
+      "notify_at": "10:20",
+      "description": "แจ้งเตือนตอนต้นคาบ 4"
+    },
+    {
+      "period": 6,
+      "start": "11:40",
+      "end": "12:20",
+      "notify_at": "11:00",
+      "description": "แจ้งเตือนตอนต้นคาบ 5"
+    },
+    {
+      "period": 7,
+      "start": "12:20",
+      "end": "13:00",
+      "notify_at": "11:40",
+      "description": "แจ้งเตือนตอนต้นคาบ 6"
+    },
+    {
+      "period": 8,
+      "start": "13:00",
+      "end": "13:40",
+      "notify_at": "12:20",
+      "description": "แจ้งเตือนตอนต้นคาบ 7"
+    },
+    {
+      "period": 9,
+      "start": "13:40",
+      "end": "14:20",
+      "notify_at": "13:00",
+      "description": "แจ้งเตือนตอนต้นคาบ 8"
+    },
+    {
+      "period": 10,
+      "start": "14:20",
+      "end": "15:00",
+      "notify_at": "13:40",
+      "description": "แจ้งเตือนตอนต้นคาบ 9"
+    }
+  ],
+  "timetable": {
+    "Monday": {
+      "name_th": "วันจันทร์",
+      "classes": {
+        "1": {
+          "subject": "พ22104",
+          "class_room": "ม.2/10",
+          "location": "ศูนย์กีฬาชั้น 1"
+        },
+        "2": {
+          "subject": "พ30228",
+          "class_room": "ม.6/5",
+          "location": "ศูนย์กีฬาชั้น 1"
+        },
+        "6": {
+          "subject": "พ22104",
+          "class_room": "ม.2/12",
+          "location": "ศูนย์กีฬาชั้น 1"
+        },
+        "7": {
+          "subject": "พ22104",
+          "class_room": "ม.2/7",
+          "location": "ศูนย์กีฬาชั้น 1"
+        }
+      }
+    },
+    "Tuesday": {
+      "name_th": "วันอังคาร",
+      "classes": {
+        "1": {
+          "subject": "พ22104",
+          "class_room": "ม.2/4",
+          "location": "ศูนย์กีฬาชั้น 1"
+        },
+        "2": {
+          "subject": "พ30220",
+          "class_room": "ม.5/5",
+          "location": "ห้อง 217"
+        },
+        "6": {
+          "subject": "ลูกเสือ 2",
+          "class_room": "ม.2",
+          "location": "-"
+        }
+      }
+    },
+    "Wednesday": {
+      "name_th": "วันพุธ",
+      "classes": {
+        "2": {
+          "subject": "พ22104",
+          "class_room": "ม.2/13",
+          "location": "ศูนย์กีฬาชั้น 1"
+        },
+        "3": {
+          "subject": "พ22104",
+          "class_room": "ม.2/8",
+          "location": "ศูนย์กีฬาชั้น 1"
+        },
+        "6": {
+          "subject": "พ22104",
+          "class_room": "ม.2/1",
+          "location": "ศูนย์กีฬาชั้น 1"
+        },
+        "7": {
+          "subject": "พ22104",
+          "class_room": "ม.2/3",
+          "location": "ศูนย์กีฬาชั้น 1"
+        },
+        "8": {
+          "subject": "ชมรม 2",
+          "class_room": "ม.2",
+          "location": "-"
+        }
+      }
+    },
+    "Thursday": {
+      "name_th": "วันพฤหัสบดี",
+      "classes": {
+        "1": {
+          "subject": "หน้าที่พลเมือง 2",
+          "class_room": "ม.2",
+          "location": "-"
+        },
+        "2": {
+          "subject": "พ30228",
+          "class_room": "ม.6/5",
+          "location": "ศูนย์กีฬาชั้น 1"
+        },
+        "6": {
+          "subject": "พ22104",
+          "class_room": "ม.2/2",
+          "location": "ศูนย์กีฬาชั้น 1"
+        },
+        "7": {
+          "subject": "พ30220",
+          "class_room": "ม.5/5",
+          "location": "ห้อง 217"
+        },
+        "9": {
+          "subject": "พ22104",
+          "class_room": "ม.2/11",
+          "location": "ศูนย์กีฬาชั้น 1"
+        }
+      }
+    },
+    "Friday": {
+      "name_th": "วันศุกร์",
+      "classes": {
+        "3": {
+          "subject": "พ22104",
+          "class_room": "ม.2/5",
+          "location": "ศูนย์กีฬาชั้น 1"
+        },
+        "6": {
+          "subject": "พ22104",
+          "class_room": "ม.2/6",
+          "location": "ศูนย์กีฬาชั้น 1"
+        },
+        "7": {
+          "subject": "พ22104",
+          "class_room": "ม.2/9",
+          "location": "ศูนย์กีฬาชั้น 1"
+        },
+        "8": {
+          "subject": "จริยธรรม 2",
+          "class_room": "ม.2",
+          "location": "-"
+        }
+      }
+    }
+  }
+}

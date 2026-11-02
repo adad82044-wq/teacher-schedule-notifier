@@ -1,0 +1,4 @@
+{
+  "gemini_api_key": "ใส่_GEMINI_API_KEY_ที่นี่_หรือใส่ผ่านหน้าต่างควบคุม",
+  "gemini_model": "gemini-3.5-flash-lite"
+}
