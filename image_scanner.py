@@ -20,18 +20,41 @@ else:
 CONFIG_FILE = os.path.join(SCRIPT_DIR, "config.json")
 DATA_FILE = os.path.join(SCRIPT_DIR, "schedule_data.json")
 
-DEFAULT_PERIODS_40MIN = [
-    {"period": 1, "start": "08:20", "end": "09:00", "notify_at": None, "description": "คาบ 1 ไม่ต้องแจ้งเตือน"},
-    {"period": 2, "start": "09:00", "end": "09:40", "notify_at": "08:20", "description": "แจ้งเตือนตอนต้นคาบ 1"},
-    {"period": 3, "start": "09:40", "end": "10:20", "notify_at": "09:00", "description": "แจ้งเตือนตอนต้นคาบ 2"},
-    {"period": 4, "start": "10:20", "end": "11:00", "notify_at": "09:40", "description": "แจ้งเตือนตอนต้นคาบ 3"},
-    {"period": 5, "start": "11:00", "end": "11:40", "notify_at": "10:20", "description": "แจ้งเตือนตอนต้นคาบ 4"},
-    {"period": 6, "start": "11:40", "end": "12:20", "notify_at": "11:00", "description": "แจ้งเตือนตอนต้นคาบ 5"},
-    {"period": 7, "start": "12:20", "end": "13:00", "notify_at": "11:40", "description": "แจ้งเตือนตอนต้นคาบ 6"},
-    {"period": 8, "start": "13:00", "end": "13:40", "notify_at": "12:20", "description": "แจ้งเตือนตอนต้นคาบ 7"},
-    {"period": 9, "start": "13:40", "end": "14:20", "notify_at": "13:00", "description": "แจ้งเตือนตอนต้นคาบ 8"},
-    {"period": 10, "start": "14:20", "end": "15:00", "notify_at": "13:40", "description": "แจ้งเตือนตอนต้นคาบ 9"},
-]
+
+def generate_periods(duration_minutes=40, start_time="08:20", count=10):
+    """คำนวณและสร้างรายการเวลาคาบเรียนและการแจ้งเตือนล่วงหน้า 1 คาบ"""
+    from datetime import datetime, timedelta
+
+    try:
+        h, m = map(int, start_time.split(":"))
+    except Exception:
+        h, m = 8, 20
+
+    curr = datetime(2000, 1, 1, h, m)
+    periods = []
+    for p_num in range(1, count + 1):
+        p_start = curr.strftime("%H:%M")
+        curr += timedelta(minutes=int(duration_minutes))
+        p_end = curr.strftime("%H:%M")
+
+        if p_num == 1:
+            notify_at = None
+            desc = "คาบ 1 ไม่ต้องแจ้งเตือน"
+        else:
+            notify_at = periods[p_num - 2]["start"]
+            desc = f"แจ้งเตือนตอนต้นคาบ {p_num - 1}"
+
+        periods.append({
+            "period": p_num,
+            "start": p_start,
+            "end": p_end,
+            "notify_at": notify_at,
+            "description": desc,
+        })
+    return periods
+
+
+DEFAULT_PERIODS_40MIN = generate_periods(40, "08:20", 10)
 
 EXTRACTION_PROMPT = """คุณคือผู้เชี่ยวชาญการอ่านตารางสอนของโรงเรียนไทย
 กรุณาอ่านข้อมูลตารางสอนจากรูปภาพนี้ให้ครบถ้วนและแม่นยำ แล้วส่งกลับเป็น JSON ตามโครงสร้างนี้เท่านั้น:
@@ -161,7 +184,9 @@ def build_full_schedule_data(extracted):
         except Exception:
             pass
 
-    periods = existing.get("periods") or DEFAULT_PERIODS_40MIN
+    dur = existing.get("period_duration_minutes", 40)
+    first_start = existing.get("first_period_start", "08:20")
+    periods = existing.get("periods") or generate_periods(dur, first_start, 10)
     day_defaults = {
         "Monday": "วันจันทร์",
         "Tuesday": "วันอังคาร",

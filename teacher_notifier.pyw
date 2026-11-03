@@ -117,7 +117,7 @@ class Schedule:
 class NotificationCard:
     WIDTH, HEIGHT = 380, 250
 
-    def __init__(self, master, title, headline, lines, color, on_close=None):
+    def __init__(self, master, title, headline, lines, color, on_close=None, badge_text="สารวิทยา"):
         self.on_close = on_close
         self._drag = (0, 0)
 
@@ -164,7 +164,7 @@ class NotificationCard:
         tk.Button(footer, text="✔  รับทราบ", bg=color, fg="#FFFFFF", activebackground="#C2185B",
                   activeforeground="#FFFFFF", relief="flat", font=(FONT_TH, 11, "bold"),
                   cursor="hand2", padx=20, command=self.acknowledge).pack(side="right", padx=14, pady=8)
-        tk.Label(footer, text="สารวิทยา (คาบละ 40 น.)", bg="#FAFAFA", fg="#9E9E9E",
+        tk.Label(footer, text=badge_text, bg="#FAFAFA", fg="#9E9E9E",
                  font=("Segoe UI", 8)).pack(side="left", padx=14)
 
     def _start_drag(self, e):
@@ -208,8 +208,18 @@ class TeacherNotifier:
         if day not in WEEKDAYS:
             return
 
-        t_start = now.replace(hour=8, minute=20, second=0, microsecond=0)
-        t_end = now.replace(hour=15, minute=0, second=0, microsecond=0)
+        periods = self.schedule.periods
+        if not periods:
+            return
+
+        try:
+            h1, m1 = map(int, periods[0]["start"].split(":"))
+            h2, m2 = map(int, periods[-1]["end"].split(":"))
+            t_start = now.replace(hour=h1, minute=m1, second=0, microsecond=0)
+            t_end = now.replace(hour=h2, minute=m2, second=0, microsecond=0)
+        except Exception:
+            t_start = now.replace(hour=8, minute=20, second=0, microsecond=0)
+            t_end = now.replace(hour=16, minute=0, second=0, microsecond=0)
 
         if t_start <= now <= t_end:
             now_hm = now.strftime("%H:%M")
@@ -223,6 +233,7 @@ class TeacherNotifier:
     def build_message(self, day, num):
         meta = self.schedule.period(num)
         info = self.schedule.class_at(day, num)
+        dur = self.schedule.data.get("period_duration_minutes", 40)
         if info:
             return (
                 f"แจ้งเตือนตารางสอน คาบ {num}",
@@ -230,7 +241,7 @@ class TeacherNotifier:
                 [f"📖 วิชา: {info['subject']}",
                  f"👥 ชั้นเรียน: {info['class_room']}",
                  f"📍 สถานที่: {info['location']}",
-                 f"⏳ เวลาสอน: {meta['start']} - {meta['end']} น. (40 นาที)"],
+                 f"⏳ เวลาสอน: {meta['start']} - {meta['end']} น. ({dur} นาที)"],
                 COLOR_TEACH,
             )
 
@@ -263,6 +274,7 @@ class TeacherNotifier:
 
         lines = []
         is_teaching_soon = False
+        periods = self.schedule.periods
 
         if curr_p:
             num = curr_p["period"]
@@ -276,14 +288,20 @@ class TeacherNotifier:
                 headline = f"คุณครูคะ ขณะนี้เวลา {now_hm} น. (คาบ {num} เป็นคาบว่าง)"
                 lines.append(f"📍 ขณะนี้: คาบ {num} ({curr_p['start']} - {curr_p['end']} น.) [คาบว่าง]")
         else:
-            t_first = now.replace(hour=8, minute=20, second=0, microsecond=0)
+            p_first = periods[0] if periods else None
+            p_last = periods[-1] if periods else None
+            first_start_str = p_first["start"] if p_first else "08:20"
+
+            h_f, m_f = map(int, first_start_str.split(":"))
+            t_first = now.replace(hour=h_f, minute=m_f, second=0, microsecond=0)
+
             if now < t_first:
                 headline = f"คุณครูคะ ขณะนี้เวลา {now_hm} น. (ก่อนเริ่มคาบ 1)"
-                lines.append("🌅 โรงเรียนเริ่มคาบ 1 เวลา 08:20 น. ค่ะ")
-                next_p = self.schedule.period(1)
+                lines.append(f"🌅 โรงเรียนเริ่มคาบ 1 เวลา {first_start_str} น. ค่ะ")
+                next_p = p_first
             else:
                 headline = f"คุณครูคะ ขณะนี้เวลา {now_hm} น. (เลิกเรียนแล้ว)"
-                lines.append("🎉 สิ้นสุดการเรียนการสอนของวันนี้แล้วค่ะ (หลัง 15:00 น.)")
+                lines.append(f"🎉 สิ้นสุดการเรียนการสอนของวันนี้แล้วค่ะ (หลังคาบ {p_last['period'] if p_last else 10})")
 
         if next_p:
             n_num = next_p["period"]
@@ -318,7 +336,11 @@ class TeacherNotifier:
             if on_close:
                 on_close()
 
-        self.card = NotificationCard(self.root, title, headline, lines, color, _closed)
+        dur = self.schedule.data.get("period_duration_minutes", 40)
+        sch_name = self.schedule.data.get("school_name", "สารวิทยา")
+        badge = f"{sch_name} (คาบละ {dur} น.)"
+
+        self.card = NotificationCard(self.root, title, headline, lines, color, _closed, badge_text=badge)
         log.info("Shown notification for period %s (%s)", num, day)
 
     def show_current_status(self, day=None, now=None, on_close=None):
@@ -334,7 +356,11 @@ class TeacherNotifier:
             if on_close:
                 on_close()
 
-        self.card = NotificationCard(self.root, title, headline, lines, color, _closed)
+        dur = self.schedule.data.get("period_duration_minutes", 40)
+        sch_name = self.schedule.data.get("school_name", "สารวิทยา")
+        badge = f"{sch_name} (คาบละ {dur} น.)"
+
+        self.card = NotificationCard(self.root, title, headline, lines, color, _closed, badge_text=badge)
         log.info("Shown current status notification for %s (%s)", now.strftime("%H:%M"), day)
 
     # ---- ตัวจับเวลา --------------------------------------------------------

@@ -292,13 +292,15 @@ class ControlPanel:
         header = tk.Frame(self.root, bg="#E91E63", height=75)
         header.pack(fill="x")
         header.pack_propagate(False)
-        tk.Label(
+        curr_dur = d.get("period_duration_minutes", 40)
+        self.lbl_main_title = tk.Label(
             header,
-            text="🌸 ระบบแจ้งเตือนตารางสอน (คาบละ 40 นาที)",
+            text=f"🌸 ระบบแจ้งเตือนตารางสอน (คาบละ {curr_dur} นาที)",
             bg="#E91E63",
             fg="#FFFFFF",
             font=("Leelawadee UI", 14, "bold"),
-        ).pack(anchor="w", padx=20, pady=(10, 2))
+        )
+        self.lbl_main_title.pack(anchor="w", padx=20, pady=(10, 2))
         self.lbl_teacher_info = tk.Label(
             header,
             text=self._header_subtitle(d),
@@ -384,6 +386,53 @@ class ControlPanel:
             font=("Leelawadee UI", 9),
         ).pack(side="right")
 
+        # Row: เลือกระยะเวลาต่อคาบ (45 / 40 / 50 นาที หรือ กำหนดเอง)
+        duration_frame = tk.Frame(view, bg="#F3E5F5", bd=1, relief="solid")
+        duration_frame.pack(fill="x", padx=14, pady=(2, 6))
+
+        tk.Label(
+            duration_frame,
+            text="⏱️ ความยาวคาบเรียน:",
+            bg="#F3E5F5",
+            fg="#4A148C",
+            font=("Leelawadee UI", 9, "bold"),
+        ).pack(side="left", padx=(10, 6), pady=4)
+
+        curr_dur = self.schedule.data.get("period_duration_minutes", 40)
+        self.dur_var = tk.IntVar(value=curr_dur)
+
+        for d_mins, label_text in [
+            (45, "45 นาที (ร่น 5 น.)"),
+            (40, "40 นาที (ร่น 10 น.)"),
+            (50, "50 นาที (ปกติ)"),
+        ]:
+            rb = tk.Radiobutton(
+                duration_frame,
+                text=label_text,
+                value=d_mins,
+                variable=self.dur_var,
+                bg="#F3E5F5",
+                activebackground="#F3E5F5",
+                selectcolor="#CE93D8",
+                font=("Leelawadee UI", 9),
+                command=self.on_duration_preset_changed,
+            )
+            rb.pack(side="left", padx=4)
+
+        btn_custom = tk.Button(
+            duration_frame,
+            text="⚙️ กำหนดเวลาเอง...",
+            bg="#8E24AA",
+            fg="#FFFFFF",
+            font=("Leelawadee UI", 8, "bold"),
+            relief="flat",
+            cursor="hand2",
+            padx=8,
+            pady=2,
+            command=self.open_custom_duration_dialog,
+        )
+        btn_custom.pack(side="right", padx=10, pady=3)
+
         days = tk.Frame(view, bg="#FFFFFF")
         days.pack(fill="x", padx=14)
         today = datetime.now().strftime("%A")
@@ -444,6 +493,100 @@ class ControlPanel:
                     c.get("location", "—"),
                 ),
             )
+
+    # ---- ปรับเปลี่ยนความยาวคาบเรียน (45 / 40 / 50 นาที หรือ กำหนดเอง) --------
+    def on_duration_preset_changed(self):
+        new_dur = self.dur_var.get()
+        first_start = self.schedule.data.get("first_period_start", "08:20")
+        count = len(self.schedule.periods) or 10
+
+        new_periods = image_scanner.generate_periods(new_dur, first_start, count)
+        self.schedule.data["period_duration_minutes"] = new_dur
+        self.schedule.data["first_period_start"] = first_start
+        self.schedule.data["periods"] = new_periods
+
+        image_scanner.save_schedule_data(self.schedule.data)
+        self.schedule.reload_if_changed(force=True)
+
+        self.lbl_main_title.config(text=f"🌸 ระบบแจ้งเตือนตารางสอน (คาบละ {new_dur} นาที)")
+        self.lbl_teacher_info.config(text=self._header_subtitle(self.schedule.data))
+        self.render_table()
+        messagebox.showinfo("ปรับเวลาคาบเรียน", f"ปรับเวลาคาบเรียนเป็น {new_dur} นาที เรียบร้อยแล้วครับ!\nตารางสอนและเวลาแจ้งเตือนถูกคำนวณใหม่เรียบร้อยแล้ว")
+
+    def open_custom_duration_dialog(self):
+        win = tk.Toplevel(self.root)
+        win.title("กำหนดความยาวคาบและเวลาเริ่ม")
+        win.geometry("380x240")
+        win.configure(bg="#FFFFFF")
+        win.resizable(False, False)
+        win.transient(self.root)
+        win.grab_set()
+
+        tk.Label(
+            win,
+            text="⏱️ กำหนดเวลาคาบเรียนเอง",
+            bg="#FFFFFF",
+            fg="#4A148C",
+            font=("Leelawadee UI", 11, "bold"),
+        ).pack(anchor="w", padx=20, pady=(14, 10))
+
+        form = tk.Frame(win, bg="#FFFFFF", padx=20)
+        form.pack(fill="x")
+
+        tk.Label(form, text="จำนวนนาทีต่อคาบ:", bg="#FFFFFF", font=("Leelawadee UI", 10)).grid(
+            row=0, column=0, sticky="w", pady=6
+        )
+        ent_dur = tk.Entry(form, font=("Leelawadee UI", 10), width=12)
+        ent_dur.grid(row=0, column=1, pady=6, padx=8)
+        ent_dur.insert(0, str(self.schedule.data.get("period_duration_minutes", 45)))
+
+        tk.Label(form, text="เวลาเริ่มคาบแรก (HH:MM):", bg="#FFFFFF", font=("Leelawadee UI", 10)).grid(
+            row=1, column=0, sticky="w", pady=6
+        )
+        ent_start = tk.Entry(form, font=("Leelawadee UI", 10), width=12)
+        ent_start.grid(row=1, column=1, pady=6, padx=8)
+        ent_start.insert(0, self.schedule.data.get("first_period_start", "08:20"))
+
+        def save_custom():
+            try:
+                d = int(ent_dur.get().strip())
+                s = ent_start.get().strip()
+                if d <= 0 or d > 120:
+                    raise ValueError("จำนวนนาทีต้องอยู่ระหว่าง 1-120")
+                if ":" not in s:
+                    raise ValueError("รูปแบบเวลาต้องเป็น HH:MM เช่น 08:20")
+            except Exception as e:
+                messagebox.showerror("ข้อมูลไม่ถูกต้อง", str(e))
+                return
+
+            count = len(self.schedule.periods) or 10
+            new_periods = image_scanner.generate_periods(d, s, count)
+            self.schedule.data["period_duration_minutes"] = d
+            self.schedule.data["first_period_start"] = s
+            self.schedule.data["periods"] = new_periods
+
+            image_scanner.save_schedule_data(self.schedule.data)
+            self.schedule.reload_if_changed(force=True)
+
+            self.dur_var.set(d)
+            self.lbl_main_title.config(text=f"🌸 ระบบแจ้งเตือนตารางสอน (คาบละ {d} นาที)")
+            self.lbl_teacher_info.config(text=self._header_subtitle(self.schedule.data))
+            self.render_table()
+            win.destroy()
+            messagebox.showinfo("บันทึกแล้ว", f"ปรับเวลาคาบเรียนเป็น {d} นาที (เริ่ม {s} น.) เรียบร้อยแล้วครับ")
+
+        tk.Button(
+            win,
+            text="💾 บันทึกและคำนวณใหม่",
+            bg="#8E24AA",
+            fg="#FFFFFF",
+            font=("Leelawadee UI", 10, "bold"),
+            relief="flat",
+            padx=16,
+            pady=5,
+            cursor="hand2",
+            command=save_custom,
+        ).pack(pady=16)
 
     # ---- แก้ไขตารางรายคาบด้วยการดับเบิ้ลคลิก -----------------------------------
     def on_row_double_click(self, event):
